@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  /* Morandi color palette */
+  --color-morandi-rose: #C9B1A1;
+  --color-morandi-rose-light: #E8DDD5;
+  --color-morandi-rose-dark: #A8917F;
+  --color-morandi-sage: #A7B5A0;
+  --color-morandi-sage-light: #D0D9CC;
+  --color-morandi-sage-dark: #8A9A82;
+  --color-morandi-dusty: #B8A9C9;
+  --color-morandi-dusty-light: #D9D0E4;
+  --color-morandi-dusty-dark: #9A8AAE;
+  --color-morandi-cream: #F5F0EB;
+  --color-morandi-warm: #D4C5B9;
+  --color-morandi-warm-light: #E8E0D8;
+  --color-morandi-warm-dark: #B8A799;
+  --color-morandi-stone: #8B8178;
+  --color-morandi-deep: #6B5E54;
+  --color-morandi-error: #C48B7F;
+  --color-morandi-warning: #D4B896;
+  --color-morandi-info: #9BB0C4;
+
+  --font-family-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+}
+
+html {
+  font-family: var(--font-family-sans);
+  background-color: var(--color-morandi-cream);
+  color: var(--color-morandi-deep);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+/* Tabular numbers for amount display */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Safe area padding for PWA */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
