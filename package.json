@@ -18,7 +18,8 @@
     "typescript": "~6.0.2",
     "vite": "^8.0.9",
     "vite-plugin-pwa": "^1.2.0",
-    "workbox-window": "^7.4.0"
+    "workbox-window": "^7.4.0",
+    "wrangler": "^4.84.0"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.0",
