@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useExpenseRealtime, useSettlementRealtime } from '../hooks/useRealtime'
 import { calculateBalances, simplifyDebts, type Transfer } from '../lib/settle'
 import type { Expense, ExpenseSplit, Profile, Settlement } from '../types/database'
 import PageContainer from '../components/layout/PageContainer'
@@ -119,6 +120,18 @@ export default function SettlementPage() {
   useEffect(() => {
     void load()
   }, [load])
+
+  useExpenseRealtime(notebookId ?? '', {
+    onInsert: () => void load(),
+    onUpdate: () => void load(),
+    onDelete: () => void load(),
+  })
+
+  useSettlementRealtime(notebookId ?? '', {
+    onInsert: () => void load(),
+    onUpdate: () => void load(),
+    onDelete: () => void load(),
+  })
 
   const balances = useMemo(() => {
     return calculateBalances(

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useExpenseRealtime } from '../hooks/useRealtime'
 import { calculateBalances } from '../lib/settle'
 import type { Expense, ExpenseSplit, Notebook, Profile } from '../types/database'
 import PageContainer from '../components/layout/PageContainer'
@@ -138,6 +139,12 @@ export default function NotebookDetailPage() {
   useEffect(() => {
     void load()
   }, [load])
+
+  useExpenseRealtime(id ?? '', {
+    onInsert: () => void load(),
+    onUpdate: () => void load(),
+    onDelete: () => void load(),
+  })
 
   const myBalance = useMemo(() => {
     if (!user) return 0
