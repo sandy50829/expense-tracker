@@ -17,11 +17,12 @@ export const CURRENCY_CONFIG: Record<CurrencyCode, { symbol: string; decimals: n
   SGD: { symbol: 'S$', decimals: 2, label: '新加坡幣' },
 }
 
-export function formatAmount(amount: number, currency: string): string {
+export function formatAmount(amount: number | string, currency: string): string {
+  const num = Number(amount)
   const config = CURRENCY_CONFIG[currency as CurrencyCode]
-  if (!config) return `${amount.toFixed(2)} ${currency}`
+  if (!config) return `${num.toFixed(2)} ${currency}`
 
-  const formatted = amount.toFixed(config.decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  const formatted = num.toFixed(config.decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   return `${config.symbol}${formatted}`
 }
 

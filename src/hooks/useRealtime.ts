@@ -2,13 +2,15 @@ import { useEffect, useRef } from 'react'
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 
+type Handler = (record: Record<string, unknown>) => void
+
 interface UseRealtimeOptions {
   table: string
   filterColumn: string
   filterValue: string
-  onInsert?: (record: Record<string, unknown>) => void
-  onUpdate?: (record: Record<string, unknown>) => void
-  onDelete?: (oldRecord: Record<string, unknown>) => void
+  onInsert?: Handler
+  onUpdate?: Handler
+  onDelete?: Handler
   enabled?: boolean
 }
 
@@ -22,6 +24,13 @@ export function useRealtime({
   enabled = true,
 }: UseRealtimeOptions) {
   const channelRef = useRef<RealtimeChannel | null>(null)
+  const onInsertRef = useRef(onInsert)
+  const onUpdateRef = useRef(onUpdate)
+  const onDeleteRef = useRef(onDelete)
+
+  onInsertRef.current = onInsert
+  onUpdateRef.current = onUpdate
+  onDeleteRef.current = onDelete
 
   useEffect(() => {
     if (!enabled || !filterValue) return
@@ -41,13 +50,13 @@ export function useRealtime({
         (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
           switch (payload.eventType) {
             case 'INSERT':
-              onInsert?.(payload.new)
+              onInsertRef.current?.(payload.new)
               break
             case 'UPDATE':
-              onUpdate?.(payload.new)
+              onUpdateRef.current?.(payload.new)
               break
             case 'DELETE':
-              onDelete?.(payload.old)
+              onDeleteRef.current?.(payload.old)
               break
           }
         },
@@ -60,15 +69,15 @@ export function useRealtime({
         channelRef.current = null
       }
     }
-  }, [table, filterColumn, filterValue, enabled, onInsert, onUpdate, onDelete])
+  }, [table, filterColumn, filterValue, enabled])
 }
 
 export function useExpenseRealtime(
   notebookId: string,
   callbacks: {
-    onInsert?: (record: Record<string, unknown>) => void
-    onUpdate?: (record: Record<string, unknown>) => void
-    onDelete?: (oldRecord: Record<string, unknown>) => void
+    onInsert?: Handler
+    onUpdate?: Handler
+    onDelete?: Handler
   },
 ) {
   useRealtime({
@@ -82,9 +91,9 @@ export function useExpenseRealtime(
 export function useSettlementRealtime(
   notebookId: string,
   callbacks: {
-    onInsert?: (record: Record<string, unknown>) => void
-    onUpdate?: (record: Record<string, unknown>) => void
-    onDelete?: (oldRecord: Record<string, unknown>) => void
+    onInsert?: Handler
+    onUpdate?: Handler
+    onDelete?: Handler
   },
 ) {
   useRealtime({

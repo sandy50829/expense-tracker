@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useExpenseRealtime } from '../hooks/useRealtime'
 import { calculateBalances } from '../lib/settle'
-import type { Expense, ExpenseSplit, Notebook, Profile } from '../types/database'
+import type { Expense, ExpenseSplit, Notebook, Profile, Settlement } from '../types/database'
 import PageContainer from '../components/layout/PageContainer'
 import Header from '../components/layout/Header'
 import Card from '../components/ui/Card'
@@ -79,6 +79,7 @@ export default function NotebookDetailPage() {
   const [notebook, setNotebook] = useState<Notebook | null>(null)
   const [expenses, setExpenses] = useState<ExpenseRow[]>([])
   const [members, setMembers] = useState<MemberRow[]>([])
+  const [settlements, setSettlements] = useState<Settlement[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [membersOpen, setMembersOpen] = useState(false)
@@ -129,6 +130,14 @@ export default function NotebookDetailPage() {
           }
         }),
       )
+
+      const { data: st, error: e4 } = await supabase
+        .from('settlements')
+        .select('*')
+        .eq('notebook_id', id)
+
+      if (e4) throw e4
+      setSettlements((st ?? []) as Settlement[])
     } catch (err) {
       setError(err instanceof Error ? err.message : '無法載入帳簿')
     } finally {
@@ -153,9 +162,10 @@ export default function NotebookDetailPage() {
         paid_by: e.paid_by,
         splits: e.expense_splits.map((s) => ({ user_id: s.user_id, amount: s.amount })),
       })),
+      settlements.map((s) => ({ from_user: s.from_user, to_user: s.to_user, amount: s.amount })),
     )
     return balances.find((b) => b.userId === user.id)?.amount ?? 0
-  }, [expenses, user])
+  }, [expenses, settlements, user])
 
   const currency = notebook?.default_currency ?? 'TWD'
   const grouped = useMemo(() => groupByDate(expenses), [expenses])

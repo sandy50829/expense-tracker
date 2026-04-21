@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useExpenseRealtime, useSettlementRealtime } from '../hooks/useRealtime'
-import { calculateBalances, simplifyDebts, type Transfer } from '../lib/settle'
+import { calculateBalances, simplifyDebts, type Transfer, type SettlementInput } from '../lib/settle'
 import type { Expense, ExpenseSplit, Profile, Settlement } from '../types/database'
 import PageContainer from '../components/layout/PageContainer'
 import Header from '../components/layout/Header'
@@ -133,14 +133,20 @@ export default function SettlementPage() {
     onDelete: () => void load(),
   })
 
+  const settlementInputs: SettlementInput[] = useMemo(
+    () => history.map((h) => ({ from_user: h.from_user, to_user: h.to_user, amount: h.amount })),
+    [history],
+  )
+
   const balances = useMemo(() => {
     return calculateBalances(
       expenses.map((e) => ({
         paid_by: e.paid_by,
         splits: (e.expense_splits ?? []).map((s) => ({ user_id: s.user_id, amount: s.amount })),
       })),
+      settlementInputs,
     )
-  }, [expenses])
+  }, [expenses, settlementInputs])
 
   const transfers = useMemo(() => simplifyDebts(balances), [balances])
 
@@ -261,14 +267,16 @@ export default function SettlementPage() {
                           <AmountDisplay amount={t.amount} currency={currency} />
                         </span>
                       </p>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        loading={markingId === transferKey(t)}
-                        onClick={() => void markSettled(t)}
-                      >
-                        標記已結算
-                      </Button>
+                      {user && (t.from === user.id || t.to === user.id) ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          loading={markingId === transferKey(t)}
+                          onClick={() => void markSettled(t)}
+                        >
+                          標記已結算
+                        </Button>
+                      ) : null}
                     </li>
                   )
                 })}

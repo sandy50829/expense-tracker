@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { signInWithEmail, signUpWithEmail, signInWithGoogle, user, loading: authLoading } = useAuth()
+  const location = useLocation()
+  const { signInWithEmail, signUpWithEmail, signInWithGoogle, user, session, loading: authLoading } = useAuth()
+
+  const redirectTo = (location.state as { from?: string } | null)?.from ?? '/'
 
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
@@ -14,10 +17,11 @@ export default function LoginPage() {
   const [displayName, setDisplayName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [signUpSuccess, setSignUpSuccess] = useState(false)
 
   useEffect(() => {
-    if (!authLoading && user) navigate('/', { replace: true })
-  }, [authLoading, user, navigate])
+    if (!authLoading && user) navigate(redirectTo, { replace: true })
+  }, [authLoading, user, navigate, redirectTo])
 
   if (authLoading || user) {
     return (
@@ -31,6 +35,25 @@ export default function LoginPage() {
     )
   }
 
+  if (signUpSuccess) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-morandi-cream px-5">
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-morandi-sage-light text-2xl">
+            ✉️
+          </div>
+          <h2 className="text-lg font-semibold text-morandi-deep">註冊成功！</h2>
+          <p className="mt-3 text-sm text-morandi-stone">
+            驗證信已寄至 <span className="font-medium text-morandi-deep">{email}</span>，請至信箱點擊驗證連結後再回來登入。
+          </p>
+          <Button className="mt-6 w-full" onClick={() => { setSignUpSuccess(false); setMode('login') }}>
+            返回登入
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -38,6 +61,7 @@ export default function LoginPage() {
     try {
       if (mode === 'login') {
         await signInWithEmail(email.trim(), password)
+        navigate(redirectTo, { replace: true })
       } else {
         if (!displayName.trim()) {
           setError('請輸入顯示名稱')
@@ -45,8 +69,12 @@ export default function LoginPage() {
           return
         }
         await signUpWithEmail(email.trim(), password, displayName.trim())
+        if (session) {
+          navigate(redirectTo, { replace: true })
+        } else {
+          setSignUpSuccess(true)
+        }
       }
-      navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : '發生錯誤，請稍後再試')
     } finally {

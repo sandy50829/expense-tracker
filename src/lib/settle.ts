@@ -14,20 +14,35 @@ export interface Transfer {
   amount: number
 }
 
+export interface SettlementInput {
+  from_user: string
+  to_user: string
+  amount: number | string
+}
+
 export function calculateBalances(
-  expenses: Array<{ paid_by: string; splits: Array<{ user_id: string; amount: number }> }>,
+  expenses: Array<{ paid_by: string; splits: Array<{ user_id: string; amount: number | string }> }>,
+  settlements: SettlementInput[] = [],
 ): Balance[] {
   const balanceMap = new Map<string, number>()
 
   for (const expense of expenses) {
     const currentPaid = balanceMap.get(expense.paid_by) ?? 0
-    const totalSplit = expense.splits.reduce((sum, s) => sum + s.amount, 0)
+    const totalSplit = expense.splits.reduce((sum, s) => sum + Number(s.amount), 0)
     balanceMap.set(expense.paid_by, currentPaid + totalSplit)
 
     for (const split of expense.splits) {
       const currentOwed = balanceMap.get(split.user_id) ?? 0
-      balanceMap.set(split.user_id, currentOwed - split.amount)
+      balanceMap.set(split.user_id, currentOwed - Number(split.amount))
     }
+  }
+
+  for (const s of settlements) {
+    const amt = Number(s.amount)
+    const fromBal = balanceMap.get(s.from_user) ?? 0
+    const toBal = balanceMap.get(s.to_user) ?? 0
+    balanceMap.set(s.from_user, fromBal + amt)
+    balanceMap.set(s.to_user, toBal - amt)
   }
 
   return Array.from(balanceMap.entries())

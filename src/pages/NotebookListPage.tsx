@@ -25,7 +25,14 @@ type NotebookRow = {
 type ExpenseRow = {
   notebook_id: string
   paid_by: string
-  expense_splits: { user_id: string; amount: number }[] | null
+  expense_splits: { user_id: string; amount: number | string }[] | null
+}
+
+type SettlementRow = {
+  notebook_id: string
+  from_user: string
+  to_user: string
+  amount: number | string
 }
 
 export default function NotebookListPage() {
@@ -88,6 +95,13 @@ export default function NotebookListPage() {
 
       if (e3) throw e3
 
+      const { data: settlementRows, error: e4 } = await supabase
+        .from('settlements')
+        .select('notebook_id, from_user, to_user, amount')
+        .in('notebook_id', ids)
+
+      if (e4) throw e4
+
       const byNotebook = new Map<string, ExpenseRow[]>()
       for (const row of (expenseRows ?? []) as ExpenseRow[]) {
         const arr = byNotebook.get(row.notebook_id) ?? []
@@ -95,14 +109,23 @@ export default function NotebookListPage() {
         byNotebook.set(row.notebook_id, arr)
       }
 
+      const settleByNotebook = new Map<string, SettlementRow[]>()
+      for (const row of (settlementRows ?? []) as SettlementRow[]) {
+        const arr = settleByNotebook.get(row.notebook_id) ?? []
+        arr.push(row)
+        settleByNotebook.set(row.notebook_id, arr)
+      }
+
       const bal: Record<string, number> = {}
       for (const id of ids) {
         const ex = byNotebook.get(id) ?? []
+        const st = settleByNotebook.get(id) ?? []
         const balances = calculateBalances(
           ex.map((r) => ({
             paid_by: r.paid_by,
             splits: r.expense_splits ?? [],
           })),
+          st.map((s) => ({ from_user: s.from_user, to_user: s.to_user, amount: s.amount })),
         )
         const mine = balances.find((b) => b.userId === user.id)
         bal[id] = mine?.amount ?? 0
@@ -155,14 +178,6 @@ export default function NotebookListPage() {
         .single()
 
       if (e1) throw e1
-
-      const { error: e2 } = await supabase.from('notebook_members').insert({
-        notebook_id: nb.id,
-        user_id: user.id,
-        role: 'owner',
-      })
-
-      if (e2) throw e2
 
       setCreateOpen(false)
       setCreateName('')

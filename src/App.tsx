@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
+import { ToastProvider } from './components/ui/Toast'
 import LoginPage from './pages/LoginPage'
 import NotebookListPage from './pages/NotebookListPage'
 import NotebookDetailPage from './pages/NotebookDetailPage'
@@ -12,6 +13,7 @@ import ProtectedRoute from './components/layout/ProtectedRoute'
 export default function App() {
   return (
     <AuthProvider>
+    <ToastProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/join/:code" element={<JoinNotebookPage />} />
@@ -24,6 +26,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </ToastProvider>
     </AuthProvider>
   )
 }

@@ -25,24 +25,22 @@ export default function JoinNotebookPage() {
     setError(null)
     try {
       const { data, error: e1 } = await supabase
-        .from('notebooks')
-        .select('*')
-        .eq('invite_code', code.trim())
-        .maybeSingle()
+        .rpc('lookup_notebook_by_invite', { invite: code.trim() })
 
       if (e1) throw e1
-      if (!data) {
+      const nb = Array.isArray(data) ? data[0] : data
+      if (!nb) {
         setNotebook(null)
         setError('找不到此邀請碼，請確認連結是否正確。')
         return
       }
-      setNotebook(data)
+      setNotebook(nb as Notebook)
 
       if (user) {
         const { data: existing, error: e2 } = await supabase
           .from('notebook_members')
           .select('id')
-          .eq('notebook_id', data.id)
+          .eq('notebook_id', nb.id)
           .eq('user_id', user.id)
           .maybeSingle()
         if (e2) throw e2

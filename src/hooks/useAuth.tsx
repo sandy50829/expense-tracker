@@ -75,12 +75,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signUpWithEmail(email: string, password: string, displayName: string) {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { display_name: displayName } },
     })
     if (error) throw error
+    if (data.session) {
+      setSession(data.session)
+      setUser(data.session.user)
+      fetchProfile(data.session.user.id)
+    }
   }
 
   async function signInWithGoogle() {
