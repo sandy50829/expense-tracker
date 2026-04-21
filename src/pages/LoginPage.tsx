@@ -15,29 +15,17 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (authLoading) {
+  useEffect(() => {
+    if (!authLoading && user) navigate('/', { replace: true })
+  }, [authLoading, user, navigate])
+
+  if (authLoading || user) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-morandi-cream">
         <div
           className="size-10 animate-spin rounded-full border-[3px] border-morandi-rose border-t-transparent"
           role="status"
           aria-label="載入中"
-        />
-      </div>
-    )
-  }
-
-  useEffect(() => {
-    if (!authLoading && user) navigate('/', { replace: true })
-  }, [authLoading, user, navigate])
-
-  if (!authLoading && user) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-morandi-cream">
-        <div
-          className="size-10 animate-spin rounded-full border-[3px] border-morandi-rose border-t-transparent"
-          role="status"
-          aria-label="重新導向中"
         />
       </div>
     )
